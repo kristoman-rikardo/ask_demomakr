@@ -371,21 +371,44 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
         }, delay);
       });
       
-      // Special handling for carousels
-      if (carouselData) {
-        // Add extra scroll attempt for carousels with longer delays
-        // This ensures the carousel is fully rendered and visible
-        const carouselDelays = [300, 600, 900, 1200];
-        carouselDelays.forEach(delay => {
-          setTimeout(() => {
-            if (chatBoxElement) {
-              chatBoxElement.scrollTop = chatBoxElement.scrollHeight + 1000;
-            }
-          }, delay);
-        });
-      }
+      // Vi håndterer karuseller i en separat effect, ikke her
+      // Dette bryter avhengighetssyklusen mellom scrollToBottom og carouselData
     }
-  }, [shadowRoot, carouselData]);
+  }, [shadowRoot]); // Fjernet carouselData fra avhengighetene
+  
+  // Separate carousel scroll effect to break the update loop
+  useEffect(() => {
+    // Handle additional scrolling for carousels
+    if (!carouselData) return;
+    
+    let chatBoxElement: Element | null = null;
+    
+    if (shadowRoot) {
+      chatBoxElement = shadowRoot.querySelector('.overflow-y-auto, .ask-overflow-y-auto');
+    } else {
+      chatBoxElement = document.querySelector('.overflow-y-auto, .ask-overflow-y-auto');
+    }
+    
+    if (!chatBoxElement) return;
+    
+    // Carousel-specific scrolling with delays
+    const carouselDelays = [300, 600, 900, 1200];
+    const timeouts: NodeJS.Timeout[] = [];
+    
+    carouselDelays.forEach(delay => {
+      const timeout = setTimeout(() => {
+        if (chatBoxElement) {
+          chatBoxElement.scrollTop = chatBoxElement.scrollHeight + 1000;
+        }
+      }, delay);
+      timeouts.push(timeout);
+    });
+    
+    // Cleanup timeouts when component unmounts or carouselData changes
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
+  }, [carouselData, shadowRoot]);
 
   // Wrapper for handleButtonClick to ensure scrolling
   const handleButtonClick = useCallback((button: any) => {
@@ -425,7 +448,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
     const intervalCheck = setInterval(handleScroll, 500);
 
     return () => {
-      chatBoxElement.removeEventListener('scroll', handleScroll);
+      chatBoxElement?.removeEventListener('scroll', handleScroll);
       clearInterval(intervalCheck);
     };
   }, [shadowRoot]);
@@ -462,28 +485,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
   }, [messages, carouselData]);
   
   // Special handling for carousel data changes to ensure they're fully visible
-  useEffect(() => {
-    if (carouselData && (!isEmbedded || !disableGlobalAutoScroll)) {
-      // Use multiple scroll attempts with increasing delays
-      // This ensures the carousel is properly rendered and visible
-      const scrollDelays = [100, 300, 600, 1000];
-      const timeouts: NodeJS.Timeout[] = [];
-      
-      scrollDelays.forEach(delay => {
-        const timeout = setTimeout(() => {
-          if (carouselData) { // Double-check carouselData still exists
-            scrollToBottom('auto');
-          }
-        }, delay);
-        timeouts.push(timeout);
-      });
-      
-      // Cleanup function to clear all timeouts
-      return () => {
-        timeouts.forEach(timeout => clearTimeout(timeout));
-      };
-    }
-  }, [carouselData, isEmbedded, disableGlobalAutoScroll, scrollToBottom]);
+  // Fjernet denne useEffect-hooken som forårsaket infinite loop
+  // Den er erstattet med en mer spesifikk versjon over som håndterer scrolling for karuseller
 
   const expandChat = () => {
     setIsMinimized(false);
