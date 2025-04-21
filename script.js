@@ -44,11 +44,13 @@
   // Legg til en variabel for å spore om bredden er satt
   let containerWidthIsFixed = false;
 
-  // Enkel logging kun til konsoll
+  // Enkel logging kun til konsoll - nå kun for widget initialisering
   function log(message) {
-    if (config.debug) {
-      console.log(`[AskWidget] ${message}`);
+    // Kun logg initialiseringsmeldingen
+    if (message.includes('Widget successfully initialized')) {
+      console.log(`[AskWidget] Ask Widget Initialized`);
     }
+    // Alle andre meldinger vil bli ignorert
   }
   
   // Test om Shadow DOM faktisk fungerer i denne konteksten
@@ -68,7 +70,7 @@
       }
       return false;
     } catch (error) {
-      log(`Shadow DOM not supported: ${error.message}`);
+      log(`Shadow DOM not supported`);
       return false;
     }
   }
@@ -191,7 +193,6 @@
       }
       
       // Sett widgetens bredde én gang og marker som låst
-      console.log(`Låser widget-bredde til ${containerMaxWidth} basert på foreldreelement`);
       container.style.maxWidth = containerMaxWidth;
       
       // Oppdater også bredden for karuselvisningen hvis den finnes
@@ -203,7 +204,7 @@
       // Merk at bredden nå er låst og ikke skal endres
       containerWidthIsFixed = true;
     } catch (error) {
-      console.error('Feil ved innstilling av container størrelse:', error);
+      // Stille feilhåndtering i produksjon
     }
   }
   

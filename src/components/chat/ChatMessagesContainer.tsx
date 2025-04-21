@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Message, Button } from '@/types/chat';
 import MessageItem from './MessageItem';
 import CarouselMessage from './CarouselMessage';
-import AgentTypingIndicator from './AgentTypingIndicator';
 
 interface CarouselData {
   layout: string;
@@ -316,20 +315,6 @@ const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
             />
           );
         })}
-        
-        {isTyping && (
-          <div className="ask-flex ask-justify-start ask-w-full">
-            <div
-              className="ask-max-w-[90%] ask-self-start ask-px-4 ask-py-2 ask-rounded-lg ask-shadow-sm ask-bg-white ask-border ask-border-gray-100"
-            >
-              <AgentTypingIndicator 
-                isTyping={true}
-                hasPartialMessages={messages.some(m => m.isPartial)}
-                textStreamingStarted={textStreamingStarted}
-              />
-            </div>
-          </div>
-        )}
         
         <div ref={messagesEndRef} style={{ height: '1px', margin: '0' }}></div>
       </div>

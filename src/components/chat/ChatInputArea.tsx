@@ -21,7 +21,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const [isButtonVisible, setIsButtonVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const placeholder = isMinimized ? "Click to ask about the product..." : "Ask about the product...";
+  const placeholder = isMinimized ? "Click to ask about the product" : "Ask about the product...";
   
   // Auto-focus on input when component mounts
   useEffect(() => {
@@ -46,6 +46,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   useEffect(() => {
     if (isMinimized) {
       setIsButtonVisible(true);
+      // Clear the input value when minimized to show placeholder
+      setInputValue('');
     }
   }, [isMinimized]);
 
@@ -72,7 +74,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   };
 
   const handleInputClick = () => {
-    if (onMaximize) {
+    if (isMinimized && onMaximize) {
       onMaximize();
     }
   };

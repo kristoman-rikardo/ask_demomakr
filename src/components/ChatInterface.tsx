@@ -291,10 +291,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
 
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
-    // Ensure fully minimized is turned off when maximizing
-    if (isFullyMinimized && !isMinimized) {
-      setIsFullyMinimized(false);
-    }
+    // Ikke sett isFullyMinimized her - minimerknappen skal bare gjemme meldingsfeltet
     
     // Call external minimize/maximize callback if provided
     if (isMinimized && onMaximize) {
@@ -498,6 +495,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
     handleRestart();
   };
   
+  // Ny funksjon for å lukke chatten fullstendig
+  const handleCloseClick = () => {
+    setIsFullyMinimized(true);
+    setIsMinimized(true);
+    
+    // Resett samtalen når man lukker
+    handleRestart();
+    
+    // Call external close callback if provided
+    if (onClose) {
+      onClose();
+    }
+    
+    // Dispatch custom event for minimize
+    try {
+      document.dispatchEvent(new Event('widgetMinimized'));
+    } catch (error) {
+      console.error('Failed to dispatch widget state event:', error);
+    }
+  };
+  
   const handleRatingSubmit = (rating: number, comment: string) => {
     // Here you would normally send the rating and comment to your backend
     console.log('Rating submitted:', rating, comment);
@@ -570,9 +588,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
                 }}
               >
                 <button
-                  onClick={handleRestartClick}
+                  onClick={handleCloseClick}
                   className="ask-bg-gray-100 ask-hover:bg-gray-200 ask-transition-colors ask-p-1 ask-rounded-full ask-shadow-sm"
-                  aria-label="Restart chat"
+                  aria-label="Close chat"
                 >
                   <X size={14} className="ask-text-[#28483f]" />
                 </button>
@@ -620,8 +638,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
           {/* Bottom container that stays together when minimized */}
           <div className={`${isMinimized ? 'ask-mt-0' : 'ask-mt-auto'} ask-sticky ask-bottom-0 ask-bg-transparent ask-transition-all ask-duration-300 ${isMinimized ? 'ask-rounded-2xl' : ''}`}
                style={{ width: '100%', flexShrink: 0 }}>
-            {/* ButtonPanel - visible in minimized but not fully minimized state */}
-            {(!isFullyMinimized) && (
+            {/* ButtonPanel - visible when not fully minimized (uavhengig av isMinimized) */}
+            {!isFullyMinimized && (
               <ButtonPanel 
                 buttons={buttons} 
                 isLoading={isButtonsLoading} 
