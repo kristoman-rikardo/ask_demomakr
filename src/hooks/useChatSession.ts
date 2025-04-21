@@ -59,7 +59,7 @@ export function useChatSession() {
     }
   }, [sessionStarted]);
 
-  const startChatSession = async () => {
+  const startChatSession = useCallback(async () => {
     setIsTyping(true);
     setIsButtonsLoading(true);
     receivedFirstTraceRef.current = false;
@@ -86,7 +86,7 @@ export function useChatSession() {
         setIsTyping(false);
       }
     }
-  };
+  }, [chatContext.launchConfig, handleTraceEvent, receivedFirstTraceRef, setIsTyping, setIsButtonsLoading, streaming]);
 
   const resetSession = useCallback(() => {
     // Clear messages
@@ -114,7 +114,20 @@ export function useChatSession() {
       
       // Fjernet transcript-lagring her - vi skal bare lagre etter bruker har sendt melding
     }, 100);
-  }, [resetMessageSourceTracker, textStreamingStartedRef, streaming]);
+  }, [
+    resetMessageSourceTracker, 
+    textStreamingStartedRef, 
+    streaming, 
+    startChatSession,
+    setMessages,
+    setButtons,
+    setIsTyping,
+    setIsButtonsLoading,
+    setStepsTotal,
+    setCurrentStepIndex,
+    setCarouselData,
+    receivedFirstTraceRef
+  ]);
 
   return {
     messages,

@@ -210,7 +210,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
       for (let entry of entries) {
         // Hent bredde fra observert element
         const width = entry.contentRect.width;
-        setContainerWidth(width);
+        if (Math.abs((width || 0) - (containerWidth || 0)) > 5) {
+          setContainerWidth(width);
+        }
       }
     });
     
