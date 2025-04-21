@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { useChatSession } from '@/hooks/useChatSession';
 import ChatMessages from './chat/ChatMessages';
 import ChatInputArea from './chat/ChatInputArea';
@@ -341,7 +341,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
     }
   };
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     // Select from shadow DOM if it exists
     let chatBoxElement: Element | null = null;
     
@@ -385,15 +385,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
         });
       }
     }
-  };
+  }, [shadowRoot, carouselData]);
 
   // Wrapper for handleButtonClick to ensure scrolling
-  const handleButtonClick = (button: any) => {
+  const handleButtonClick = useCallback((button: any) => {
     originalHandleButtonClick(button);
     // Scroll to bottom whenever a button is clicked
     setTimeout(() => scrollToBottom('auto'), 10);
     setTimeout(() => scrollToBottom('auto'), 300);
-  };
+  }, [originalHandleButtonClick, scrollToBottom]);
 
   // Listen for scroll events to show/hide scroll indicator
   useEffect(() => {
@@ -443,7 +443,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
       }, 300);
       return () => clearInterval(interval);
     }
-  }, [isTyping, showScrollButton, isEmbedded, disableGlobalAutoScroll]);
+  }, [isTyping, showScrollButton, isEmbedded, disableGlobalAutoScroll, scrollToBottom]);
 
   // Ensure carouselData persists through message changes
   useEffect(() => {
@@ -467,11 +467,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
       // Use multiple scroll attempts with increasing delays
       // This ensures the carousel is properly rendered and visible
       const scrollDelays = [100, 300, 600, 1000];
+      const timeouts: NodeJS.Timeout[] = [];
+      
       scrollDelays.forEach(delay => {
-        setTimeout(() => scrollToBottom('auto'), delay);
+        const timeout = setTimeout(() => {
+          if (carouselData) { // Double-check carouselData still exists
+            scrollToBottom('auto');
+          }
+        }, delay);
+        timeouts.push(timeout);
       });
+      
+      // Cleanup function to clear all timeouts
+      return () => {
+        timeouts.forEach(timeout => clearTimeout(timeout));
+      };
     }
-  }, [carouselData, isEmbedded, disableGlobalAutoScroll]);
+  }, [carouselData, isEmbedded, disableGlobalAutoScroll, scrollToBottom]);
 
   const expandChat = () => {
     setIsMinimized(false);
