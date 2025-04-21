@@ -94,11 +94,25 @@
         opacity: 1 !important;
         visibility: visible !important;
         box-sizing: border-box !important;
-        flex: 1 1 auto !important;
         resize: none !important;
-        /* Maksbredde settes dynamisk senere */
-        margin: 20px 0 !important;
+        margin: 0 !important;
         z-index: 100 !important;
+        width: 100% !important;
+      }
+      
+      /* Grid-layout for desktop visning (basert på 64em = 1024px) */
+      @media (min-width: 64em) {
+        /* Gjør hovedgridet todelt: tekst 1fr + widget 50vw */
+        section.product-view__main[data-v-4d2ec0af] {
+          grid-template-columns: 1fr 50vw !important;
+          gap: 2rem !important;
+        }
+        
+        /* Stil for widget-container */
+        #${config.containerID} {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
       }
       
       /* Sikre at Shadow DOM wrapper også kan ekspandere */
@@ -238,40 +252,6 @@
     const activeSelector = getTargetSelector();
     log(`Bruker selektor: ${activeSelector} for nåværende skjermstørrelse (${window.innerWidth}px)`);
     
-    let targetElement = document.querySelector(activeSelector);
-    if (!targetElement) {
-      log('Could not find target element: ' + activeSelector);
-      log('Trying alternative selectors...');
-      
-      const alternativeSelectors = [
-        config.targetSelectorDesktop,
-        config.targetSelectorMobile,
-        '.product-accordion',
-        '.product-description',
-        '.product-info',
-        '.product-details',
-        'main',
-        '.main-content',
-        'body'
-      ];
-      
-      for (const selector of alternativeSelectors) {
-        if (selector === activeSelector) continue; // Skip den vi allerede har prøvd
-        
-        const alt = document.querySelector(selector);
-        if (alt) {
-          log('Found alternative target: ' + selector);
-          targetElement = alt;
-          break;
-        }
-      }
-      
-      if (!targetElement) {
-        targetElement = document.body;
-        log('Using document.body as fallback container');
-      }
-    }
-    
     // Fjern eksisterende container dersom den finnes
     const existingContainer = document.getElementById(config.containerID);
     if (existingContainer) {
@@ -285,14 +265,38 @@
     container.setAttribute('data-ask-widget', 'true');
     container.setAttribute('data-expandable', 'true');
     
-    // For desktop, sett inn containeren FØR målelementet (men kun hvis det er desktop målselektor)
-    const isMobile = window.innerWidth < config.breakpoint;
-    if (!isMobile && targetElement.matches(config.targetSelectorDesktop)) {
-      log('Plasserer widget over accordion i desktop modus');
-      targetElement.parentNode.insertBefore(container, targetElement);
+    const isMobile = window.innerWidth < 1024; // 64em = 1024px
+    
+    if (!isMobile) {
+      // For desktop: sett inn i grid-layout
+      const gridContainer = document.querySelector('section.product-view__main[data-v-4d2ec0af]');
+      
+      if (gridContainer) {
+        log('Plasserer widget i grid-layout på desktop');
+        gridContainer.appendChild(container); // Legges til sist i grid -> høyre kolonne
+        log('Widget plassert i høyre kolonne av grid-layout');
+      } else {
+        // Fallback til standard plassering hvis grid-container ikke finnes
+        log('Fant ikke grid-container section.product-view__main, bruker fallback');
+        const targetElement = document.querySelector(activeSelector);
+        
+        if (targetElement) {
+          targetElement.appendChild(container);
+        } else {
+          document.body.appendChild(container);
+          log('Using document.body as fallback container');
+        }
+      }
     } else {
-      // Behold standard plassering for mobile eller andre selektorer
-      targetElement.appendChild(container);
+      // For mobil: bruk standard plassering
+      const targetElement = document.querySelector(activeSelector);
+      
+      if (targetElement) {
+        targetElement.appendChild(container);
+      } else {
+        document.body.appendChild(container);
+        log('Using document.body as fallback container');
+      }
     }
     
     log('Added chat widget container to target element');
@@ -308,51 +312,35 @@
   function handleWindowResize() {
     const currentSelector = getTargetSelector();
     const container = document.getElementById(config.containerID);
-    const isMobile = window.innerWidth < config.breakpoint;
+    const isMobile = window.innerWidth < 1024; // 64em = 1024px
     
-    // Siden bredden er låst, fjerner vi kallet til updateContainerMaxWidth()
     // Vi beholder flytt-logikken hvis widget-containeren ikke er hvor den skal være
     if (container && isWidgetInitialized) {
-      const targetElement = document.querySelector(currentSelector);
-      
-      if (targetElement) {
-        // For desktop: sjekk om containeren er plassert FØR målelementet hvis det er desktop-selektor
-        if (!isMobile && targetElement.matches(config.targetSelectorDesktop)) {
-          // Sjekk om containeren er plassert riktig (før accordion)
-          if (container.nextElementSibling !== targetElement) {
-            log(`Flytter widget til ny posisjon OVER accordionen (${currentSelector})`);
+      if (!isMobile) {
+        // For desktop: plasser widget i grid-layout
+        const gridContainer = document.querySelector('section.product-view__main[data-v-4d2ec0af]');
+        
+        if (gridContainer) {
+          // Sjekk om containeren er plassert riktig (i grid-containeren)
+          if (!gridContainer.contains(container)) {
+            log('Flytter widget til posisjon i grid-layout på desktop');
             
-            // Lagre containerens innhold og tilstand
-            const containerContent = container.innerHTML;
-            const containerHeight = container.style.height;
-            const containerMinHeight = container.style.minHeight;
-            const containerDisplay = container.style.display;
-            const containerOpacity = container.style.opacity;
-            const containerVisible = container.getAttribute('data-visible');
+            // Flytt widgeten til grid-containeren
+            gridContainer.appendChild(container);
             
-            // Flytt containeren til FØR målelementet
-            targetElement.parentNode.insertBefore(container, targetElement);
-            
-            log('Widget flyttet til posisjon OVER accordionen');
+            log('Widget flyttet til grid-layout');
           }
-        } else {
-          // For mobile: container skal være INNE i målelementet
-          if (!targetElement.contains(container)) {
-            log(`Flytter widget til ny posisjon INNE i målelement (${currentSelector})`);
-            
-            // Lagre containerens innhold og tilstand
-            const containerContent = container.innerHTML;
-            const containerHeight = container.style.height;
-            const containerMinHeight = container.style.minHeight;
-            const containerDisplay = container.style.display;
-            const containerOpacity = container.style.opacity;
-            const containerVisible = container.getAttribute('data-visible');
-            
-            // Flytt containeren til inne i målelementet
-            targetElement.appendChild(container);
-            
-            log('Widget flyttet til posisjon INNE i målelement');
-          }
+        }
+      } else {
+        // For mobile: container skal være INNE i målelementet
+        const mobileTarget = document.querySelector(config.targetSelectorMobile);
+        if (mobileTarget && !mobileTarget.contains(container)) {
+          log(`Flytter widget til ny posisjon INNE i målelement (${config.targetSelectorMobile})`);
+          
+          // Flytt containeren til inne i målelementet for mobil
+          mobileTarget.appendChild(container);
+          
+          log('Widget flyttet til posisjon INNE i målelement');
         }
       }
     }
