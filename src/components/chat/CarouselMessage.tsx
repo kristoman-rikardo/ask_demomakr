@@ -61,7 +61,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
     }
   }, [cards]);
   
-  // Fix for embla-carousel viewport overflow
+  // Fix for embla-carousel viewport overflow - gjør synlig for flere karuseller
   useEffect(() => {
     // Find the embla viewport element and fix its overflow
     const fixCarouselOverflow = () => {
@@ -83,6 +83,15 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
           container.style.paddingRight = '8px';
           console.log('Fixed embla carousel container padding');
         }
+        
+        // Sikre at karusell ikke påvirker chat-bredden
+        const carouselRoot = containerRef.current.querySelector('.embla');
+        if (carouselRoot instanceof HTMLElement) {
+          carouselRoot.style.maxWidth = '100%';
+          carouselRoot.style.width = '100%';
+          carouselRoot.style.overflow = 'visible';
+          carouselRoot.style.boxSizing = 'border-box';
+        }
       }
     };
     
@@ -103,28 +112,37 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+        // Bruk faste bredde i stedet for dynamisk målt bredde for å unngå påvirkning på chatten
+        const parentWidth = containerRef.current.parentElement?.offsetWidth || 0;
+        setContainerWidth(parentWidth);
       }
     };
     
-    updateWidth(); // Initial measurement
-    window.addEventListener('resize', updateWidth);
+    // Bruk ResizeObserver for mer pålitelig breddeoppdatering
+    const resizeObserver = new ResizeObserver(entries => {
+      updateWidth();
+    });
     
-    // Add a slight delay to ensure accurate measurement after DOM updates
-    const timer = setTimeout(updateWidth, 100);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    // Initial measurement
+    updateWidth();
     
     return () => {
-      window.removeEventListener('resize', updateWidth);
-      clearTimeout(timer);
+      resizeObserver.disconnect();
     };
   }, [cards]);
   
   // Responsive slides count based on screen width
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 350) {
+      // Juster antall slides basert på skjermbredde
+      const width = window.innerWidth;
+      if (width < 350) {
         setSlidesPerView(1);
-      } else if (window.innerWidth < 550) {
+      } else if (width < 550) {
         setSlidesPerView(2);
       } else {
         setSlidesPerView(3); // Show 3 on wider screens (>550px)
@@ -140,7 +158,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
   
   // Calculate card width based on container width and slides per view
   const cardWidth = containerWidth > 0 
-    ? Math.floor((containerWidth - (slidesPerView * 16)) / slidesPerView) - 4 // Further adjusted spacing for better fit
+    ? Math.floor((containerWidth - (slidesPerView * 16)) / slidesPerView) - 8 // Ytterligere justert for bedre tilpasning
     : slidesPerView === 1 ? 170 : 155;
     
   // Helper function to check if a button is a "Buy Now" or external link button
@@ -193,7 +211,13 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
   return (
     <div 
       ref={containerRef}
-      className={cn("ask-w-full ask-relative ask-overflow-visible ask-mt-2 ask-mb-5", className)}
+      className={cn("ask-w-full ask-relative ask-overflow-visible ask-mt-2 ask-mb-5 ask-box-border", className)}
+      style={{ 
+        maxWidth: '100%', 
+        width: '100%', 
+        boxSizing: 'border-box',
+        overflow: 'visible'
+      }}
     >
       <Carousel 
         className="ask-w-full ask-mx-auto ask-overflow-visible"
@@ -205,7 +229,10 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
           loop: false,
         }}
       >
-        <CarouselContent className={`${cards.length === 1 ? "ask-flex ask-justify-start" : "ask-flex ask-justify-between"} ask-gap-2 ask-pl-1`}>
+        <CarouselContent 
+          className={`${cards.length === 1 ? "ask-flex ask-justify-start" : "ask-flex ask-justify-between"} ask-gap-2 ask-pl-1`}
+          style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-start' }}
+        >
           {cards.map((card, index) => (
             <CarouselItem 
               key={card.id || card.title} 
@@ -220,7 +247,9 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
               } ${index === 0 ? 'ask-ml-0' : ''} ask-overflow-visible`}
               style={{
                 flex: slidesPerView === 1 ? '0 0 100%' : `0 0 calc(${100 / slidesPerView}% - 16px)`,
-                maxWidth: slidesPerView === 1 ? '100%' : `calc(${100 / slidesPerView}% - 16px)`
+                maxWidth: slidesPerView === 1 ? '100%' : `calc(${100 / slidesPerView}% - 16px)`,
+                boxSizing: 'border-box',
+                display: 'block'
               }}
             >
               <Card 
@@ -249,90 +278,36 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
                     />
                   </div>
                 )}
-                <CardHeader className="ask-p-2 ask-pb-1 ask-flex-none">
-                  <CardTitle 
-                    className="ask-font-medium ask-truncate ask-text-sm"
-                    style={{ 
-                      fontFamily: "'Inter', system-ui, sans-serif",
-                      fontSize: '0.9rem', // Adjusted font size for better proportion
-                      lineHeight: 1.3
-                    }}
-                  >
+                <CardHeader className="ask-p-3 ask-pb-1">
+                  <CardTitle className="ask-text-sm ask-font-medium">
                     {card.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="ask-p-2 ask-pt-0 ask-flex-grow">
-                  <CardDescription 
-                    className="ask-line-clamp-2 ask-text-xs"
-                    style={{ 
-                      fontFamily: "'Inter', system-ui, sans-serif",
-                      fontSize: '0.8rem', // Adjusted font size for better proportion
-                      lineHeight: 1.4,
-                      color: '#666'
-                    }}
-                  >
+                <CardContent className="ask-p-3 ask-pt-1 ask-flex-grow">
+                  <CardDescription className="ask-text-xs ask-line-clamp-3">
                     {card.description.text}
                   </CardDescription>
                 </CardContent>
                 {card.buttons && card.buttons.length > 0 && (
-                  <CardFooter className="ask-p-2 ask-pt-1 ask-flex ask-flex-wrap ask-gap-2 ask-flex-none ask-justify-center">
+                  <CardFooter className="ask-p-3 ask-pt-1 ask-flex ask-flex-wrap ask-gap-2 ask-justify-center">
                     {card.buttons.map((button, idx) => {
-                      const isBuyNowButton = isExternalLinkButton(button);
+                      const isExternal = isExternalLinkButton(button);
                       
                       return (
                         <UIButton
                           key={idx}
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleButtonClick(button)}
-                          className="ask-rounded-md ask-transition-all ask-duration-200 ask-w-full ask-text-xs ask-h-8 ask-px-3 ask-py-1.5"
-                          style={{ 
-                            fontFamily: "'Inter', system-ui, sans-serif",
-                            fontWeight: 500,
-                            fontSize: '0.75rem', // Adjusted font size for better proportion
-                            boxShadow: '1px 1px 3px rgba(0,0,0,0.12)',
-                            backgroundColor: isBuyNowButton ? '#28483F10' : '#f0f0f0',
-                            border: '1px solid #e0e0e0',
-                            transform: 'translateY(0)',
-                            transition: 'all 0.2s ease',
-                            position: 'relative',
-                            zIndex: 1,
-                            lineHeight: 1.2,
-                            whiteSpace: 'normal', // Allow text wrapping in buttons
-                            minHeight: '32px'
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#28483F20' : '#e8e8e8';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.18)';
-                            e.currentTarget.style.zIndex = '5';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#28483F10' : '#f0f0f0';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '1px 1px 3px rgba(0,0,0,0.12)';
-                            e.currentTarget.style.zIndex = '1';
-                          }}
+                          className={cn(
+                            "ask-w-full ask-text-xs", 
+                            isExternal && "ask-bg-gray-50"
+                          )}
                         >
-                          <span 
-                            style={{ 
-                              fontSize: '0.75rem', // Adjusted font size for better proportion
-                              fontFamily: "'Inter', system-ui, sans-serif",
-                              fontWeight: 500,
-                              lineHeight: 1.2,
-                              color: isBuyNowButton ? '#28483F' : 'inherit',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '4px'
-                            }}
-                          >
+                          <span className="ask-flex ask-items-center ask-gap-1">
                             {button.name}
-                            {isBuyNowButton && (
-                              <ExternalLink 
-                                size={10} // Adjusted size for better proportion
-                                style={{ color: '#28483F', strokeWidth: 2 }} 
-                              />
+                            {isExternal && (
+                              <ExternalLink className="ask-h-3 ask-w-3 ask-ml-1" />
                             )}
                           </span>
                         </UIButton>
@@ -344,6 +319,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = ({ cards, onButtonClick,
             </CarouselItem>
           ))}
         </CarouselContent>
+        
         {cards.length > slidesPerView && (
           <>
             <CarouselPrevious 

@@ -4,11 +4,18 @@ import MessageItem from './MessageItem';
 import CarouselMessage from './CarouselMessage';
 import AgentTypingIndicator from './AgentTypingIndicator';
 
+interface CarouselData {
+  layout: string;
+  cards: any[];
+  messageId: string;
+  timestamp: number;
+}
+
 interface ChatMessagesContainerProps {
   messages: Message[];
   isTyping: boolean;
   textStreamingStarted?: boolean;
-  carouselData?: any | null;
+  carouselData?: CarouselData | null;
   onButtonClick?: (button: Button) => void;
 }
 
@@ -26,6 +33,38 @@ const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
   const [showTopIndicator, setShowTopIndicator] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
+  // Lagre alle karuselldata mottatt i en map for å støtte flere karuseller
+  const [carouselDataMap, setCarouselDataMap] = useState<Map<string, CarouselData>>(new Map());
+
+  // Oppdater carouselDataMap når carouselData endres
+  useEffect(() => {
+    if (carouselData) {
+      setCarouselDataMap(prevMap => {
+        const newMap = new Map(prevMap);
+        newMap.set(carouselData.messageId, carouselData);
+        return newMap;
+      });
+    }
+  }, [carouselData]);
+  
+  // Hold styr på alle karusellmeldinger som nå er i meldingslisten
+  // Dette gjør at vi kan rense opp karuseller som ikke lenger vises
+  useEffect(() => {
+    if (carouselDataMap.size > 0) {
+      // Fjern karuselldata som ikke lenger har en tilhørende melding
+      setCarouselDataMap(prevMap => {
+        const newMap = new Map(prevMap);
+        for (const messageId of newMap.keys()) {
+          const messageExists = messages.some(msg => msg.id === messageId);
+          if (!messageExists) {
+            newMap.delete(messageId);
+          }
+        }
+        return newMap;
+      });
+    }
+  }, [messages, carouselDataMap]);
+
   // Keep track of previous message count to detect new messages
   const prevMessagesLengthRef = useRef(messages.length);
   // Keep track of whether message content is being updated (streaming)
@@ -233,24 +272,30 @@ const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
           const isLast = index === messages.length - 1;
           const isUser = message.type === 'user';
           
-          // Check if this is a carousel message
-          const isCarouselMessage = carouselData && carouselData.messageId === message.id;
+          // Sjekk om denne meldingen er en karusellmelding
+          const carouselForThisMessage = carouselDataMap.get(message.id);
+          const isCarouselMessage = carouselForThisMessage !== undefined;
           
-          if (isCarouselMessage) {
+          if (isCarouselMessage && carouselForThisMessage) {
             // Render the carousel in this message's place
             return (
               <div 
                 key={message.id}
                 id={`message-${message.id}`}
                 ref={isLast ? lastMessageRef : null}
-                className="ask-flex ask-justify-start ask-w-full ask-relative ask-group ask-my-5"
+                className="ask-flex ask-justify-start ask-w-full ask-relative ask-group ask-my-4"
               >
                 <div
                   className="ask-w-full ask-self-start ask-px-1 ask-cursor-pointer"
-                  style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+                  style={{ 
+                    fontFamily: "'Inter', system-ui, sans-serif", 
+                    width: '100%', 
+                    maxWidth: '100%',
+                    boxSizing: 'border-box'
+                  }}
                 >
                   <CarouselMessage 
-                    cards={carouselData.cards} 
+                    cards={carouselForThisMessage.cards} 
                     onButtonClick={onButtonClick} 
                   />
                 </div>
@@ -258,28 +303,63 @@ const ChatMessagesContainer: React.FC<ChatMessagesContainerProps> = ({
             );
           }
           
-          // Otherwise render a regular message
+          // Otherwise render a normal message
           return (
-            <MessageItem
+            <MessageItem 
               key={message.id}
               messageId={message.id}
               content={message.content}
               isUser={isUser}
-              isPartial={message.isPartial}
+              isPartial={message.isPartial || false}
               isLast={isLast}
-              lastMessageRef={lastMessageRef}
+              lastMessageRef={isLast ? lastMessageRef : null}
             />
           );
         })}
         
-        <AgentTypingIndicator 
-          isTyping={isTyping} 
-          hasPartialMessages={messages.some(m => m.isPartial)}
-          textStreamingStarted={textStreamingStarted}
-        />
+        {isTyping && (
+          <div className="ask-flex ask-justify-start ask-w-full">
+            <div
+              className="ask-max-w-[90%] ask-self-start ask-px-4 ask-py-2 ask-rounded-lg ask-shadow-sm ask-bg-white ask-border ask-border-gray-100"
+            >
+              <AgentTypingIndicator 
+                isTyping={true}
+                hasPartialMessages={messages.some(m => m.isPartial)}
+                textStreamingStarted={textStreamingStarted}
+              />
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} style={{ height: '1px', margin: '0' }}></div>
       </div>
-      
-      <div ref={messagesEndRef} className="ask-h-1" />
+
+      {showScrollButton && (
+        <button
+          className="ask-absolute ask-bottom-4 ask-right-4 ask-bg-gray-100 ask-hover:bg-gray-200 ask-p-2 ask-rounded-full ask-shadow-md ask-transition-all"
+          onClick={() => {
+            scrollToBottom();
+            setShouldAutoScroll(true);
+          }}
+          aria-label="Scroll to bottom"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="lucide lucide-arrow-down"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
+        </button>
+      )}
     </div>
   );
 };

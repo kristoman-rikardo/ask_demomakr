@@ -71,7 +71,7 @@ export function useTextAndChoiceHandler(
       setIsTyping(false);
       
       // Create a special message ID for this carousel
-      const carouselMsgId = `carousel-${Date.now()}`;
+      const carouselMsgId = `carousel-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       messageSourceTracker.current[carouselMsgId] = 'carousel';
       
       // Important: Add an actual message to the chat for the carousel
@@ -81,12 +81,18 @@ export function useTextAndChoiceHandler(
       
       // Set carousel data with a reference to the message we just created
       // This links the carousel to its message in the chat flow
-      setCarouselData({
+      // Nå må vi modifisere denne for å håndtere flere karuseller
+      
+      // Hent eksisterende karuselldata først, for å unngå å overskrive
+      const newCarouselData = {
         layout: trace.payload.layout,
         cards: trace.payload.cards,
         messageId: carouselMsgId,
         timestamp: Date.now()
-      });
+      };
+      
+      // Oppdater karuselldata (dette vil ikke fjerne tidligere karuseller)
+      setCarouselData(newCarouselData);
     }
   };
 

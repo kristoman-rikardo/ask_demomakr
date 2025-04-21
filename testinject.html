@@ -9,58 +9,7 @@
   <div style="height: 100px; background-color: #000000;"></div>
   <div id="chat-widget-container"></div>
   <script src="dist/widget/chatWidget.js"></script>
-  <script>
-    // Flag to track if widget has been initialized
-    let widgetInitialized = false;
-
-    // Listen for the scrapeComplete event from scrapeSite.js
-    window.addEventListener('scrapeComplete', function(event) {
-      // Check if we've already initialized the widget
-      if (widgetInitialized) return;
-      
-      const { side_innhold, browser_url, produkt_navn } = event.detail;
-      
-      // Logg bruker-ID info
-      if (produkt_navn) {
-        console.log(`Produktnavn for bruker-ID: "${produkt_navn}"`);
-      } else {
-        console.log('Ingen produktnavn tilgjengelig for bruker-ID');
-      }
-      
-      // Only initialize if side_innhold has content
-      if (side_innhold) {
-        console.log('Initializing chat widget with scraped content, length:', side_innhold.length);
-        
-        window.ChatWidget?.init({
-          containerId: 'chat-widget-container',
-          apiKey: 'VF.DM.67f3a3aabc8d1cb788d71d55.oO0bhO9dNnsn67Lv',
-          projectID: '67f291952280faa3b19ddfcb',
-          disableAutoScroll: true,
-          launchConfig: {
-            event: {
-              type: "launch",
-              payload: {
-                browser_url: browser_url,
-                side_innhold: side_innhold,
-                produkt_navn: produkt_navn || ''
-              }
-            }
-          }
-        });
-        
-        widgetInitialized = true;
-      } else {
-        console.log('Scraping did not produce content, widget will not be initialized');
-      }
-    });
-
-    window.onload = function() {
-      // Load the scraping script
-      const script = document.createElement('script');
-      script.src = 'scrapeSite.js';
-      document.body.appendChild(script);
-    };
-  </script>
+  <script src="script.js"></script>
   <div style="height: 100px; background-color: #000000;"></div>
   <div class="ask-p-4 ask-bg-yellow-100 ask-rounded-lg ask-shadow-md ask-max-w-3xl ask-mx-auto ask-my-6">
     <h2 class="ask-text-2xl ask-font-bold ask-mb-3 ask-text-red-600">One Piece</h2>

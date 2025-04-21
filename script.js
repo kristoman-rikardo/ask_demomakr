@@ -13,7 +13,7 @@
     jsPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.js',
     scrapePath: 'https://kristoman-rikardo.github.io/ask1proto-21/scrapeSite.js',
     containerID: 'ask-chat-widget-container',
-    targetSelectorDesktop: '.actions', // For skjermer 768px eller bredere
+    targetSelectorDesktop: '.product-accordion.accordion-items.product-view__accordion', // Selector for placing widget OVER accordion on desktop
     targetSelectorMobile: '.product-description__short-description', // For skjermer smalere enn 768px
     breakpoint: 768, // Grensepunkt for å bytte mellom mobile og desktop selektorer
     minHeight: 300,
@@ -212,9 +212,27 @@
     return isMobile ? config.targetSelectorMobile : config.targetSelectorDesktop;
   }
   
+  // Sjekk om produkttittel er tilgjengelig på siden
+  function isProductTitleAvailable() {
+    const productTitle = document.querySelector('.product-header__title');
+    if (productTitle) {
+      log('Fant produkttittel: ' + productTitle.textContent.trim());
+      return true;
+    }
+    log('Produkttittel ikke funnet på siden - widget vil ikke bli initialisert');
+    return false;
+  }
+  
   // Finn target-elementet og sett inn widget-containeren
   function setupContainer() {
     log('Setting up widget container');
+    
+    // Sjekk om produkttittelen er tilgjengelig, hvis ikke avslutt initialiseringen
+    if (!isProductTitleAvailable()) {
+      log('Produkttittel ikke funnet - widget blir ikke initialisert');
+      return false;
+    }
+    
     addGlobalStyles();
     
     const activeSelector = getTargetSelector();
@@ -267,50 +285,21 @@
     container.setAttribute('data-ask-widget', 'true');
     container.setAttribute('data-expandable', 'true');
     
-    // Bruk inline style – merk at max-width settes dynamisk senere
-    container.setAttribute('style', `
-      width: 100% !important;
-      margin: 20px 0 !important;
-      position: relative !important;
-      display: none;
-      opacity: 0;
-      transition: opacity 0.3s ease, height 0.3s ease !important;
-      overflow: visible !important;
-      min-height: ${config.minHeight}px !important;
-      height: auto !important;
-      max-height: none !important;
-      box-sizing: border-box !important;
-      resize: none !important;
-      flex: 1 1 auto !important;
-      z-index: 100 !important;
-      border: 1px solid transparent !important;
-    `);
-    
-    container.scrollIntoView = function() {};
-    container.focus = function() {};
-    
-    // Sett inn containeren etter target-elementet
-    targetElement.insertAdjacentElement('afterend', container);
-    log('Widget container created and inserted into page');
-    
-    // Sett containerens bredde én gang ved oppstart
-    // Vi beholder denne enkle oppdateringen ved første oppstart
-    updateContainerMaxWidth();
-    
-    // Sett opp lytter for orientering/rotasjon av enhet - men kun for høydejusteringer, ikke bredde
-    if ('orientation' in window) {
-      window.addEventListener('orientationchange', () => {
-        log('Orientation changed, updating container height only');
-        // Gi enheten tid til å fullføre rotasjonen før vi måler på nytt
-        setTimeout(() => {
-          // Vi kaller IKKE updateContainerMaxWidth() her lenger
-          checkAndUpdateHeight();
-        }, 300);
-      });
+    // For desktop, sett inn containeren FØR målelementet (men kun hvis det er desktop målselektor)
+    const isMobile = window.innerWidth < config.breakpoint;
+    if (!isMobile && targetElement.matches(config.targetSelectorDesktop)) {
+      log('Plasserer widget over accordion i desktop modus');
+      targetElement.parentNode.insertBefore(container, targetElement);
+    } else {
+      // Behold standard plassering for mobile eller andre selektorer
+      targetElement.appendChild(container);
     }
     
-    // Fjern ResizeObserver-oppsett som oppdaterer bredden dynamisk
-    // Vi trenger ikke dette siden bredden nå låses ved oppstart
+    log('Added chat widget container to target element');
+    setContainerHeight(config.minHeight);
+    
+    // Start monitorering av containerhøyde
+    setupHeightMonitoring();
     
     return true;
   }
@@ -319,29 +308,52 @@
   function handleWindowResize() {
     const currentSelector = getTargetSelector();
     const container = document.getElementById(config.containerID);
+    const isMobile = window.innerWidth < config.breakpoint;
     
     // Siden bredden er låst, fjerner vi kallet til updateContainerMaxWidth()
     // Vi beholder flytt-logikken hvis widget-containeren ikke er hvor den skal være
     if (container && isWidgetInitialized) {
       const targetElement = document.querySelector(currentSelector);
       
-      // Sjekk om containeren er plassert etter riktig element
-      if (targetElement && container.previousElementSibling !== targetElement) {
-        log(`Flytter widget til ny posisjon (${currentSelector})`);
-        
-        // Lagre containerens innhold og tilstand
-        const containerContent = container.innerHTML;
-        const containerHeight = container.style.height;
-        const containerMinHeight = container.style.minHeight;
-        const containerDisplay = container.style.display;
-        const containerOpacity = container.style.opacity;
-        const containerVisible = container.getAttribute('data-visible');
-        
-        // Flytt containeren til ny posisjon
-        targetElement.insertAdjacentElement('afterend', container);
-        
-        // Vi kaller ikke updateContainerMaxWidth() lenger
-        log('Widget flyttet til ny posisjon');
+      if (targetElement) {
+        // For desktop: sjekk om containeren er plassert FØR målelementet hvis det er desktop-selektor
+        if (!isMobile && targetElement.matches(config.targetSelectorDesktop)) {
+          // Sjekk om containeren er plassert riktig (før accordion)
+          if (container.nextElementSibling !== targetElement) {
+            log(`Flytter widget til ny posisjon OVER accordionen (${currentSelector})`);
+            
+            // Lagre containerens innhold og tilstand
+            const containerContent = container.innerHTML;
+            const containerHeight = container.style.height;
+            const containerMinHeight = container.style.minHeight;
+            const containerDisplay = container.style.display;
+            const containerOpacity = container.style.opacity;
+            const containerVisible = container.getAttribute('data-visible');
+            
+            // Flytt containeren til FØR målelementet
+            targetElement.parentNode.insertBefore(container, targetElement);
+            
+            log('Widget flyttet til posisjon OVER accordionen');
+          }
+        } else {
+          // For mobile: container skal være INNE i målelementet
+          if (!targetElement.contains(container)) {
+            log(`Flytter widget til ny posisjon INNE i målelement (${currentSelector})`);
+            
+            // Lagre containerens innhold og tilstand
+            const containerContent = container.innerHTML;
+            const containerHeight = container.style.height;
+            const containerMinHeight = container.style.minHeight;
+            const containerDisplay = container.style.display;
+            const containerOpacity = container.style.opacity;
+            const containerVisible = container.getAttribute('data-visible');
+            
+            // Flytt containeren til inne i målelementet
+            targetElement.appendChild(container);
+            
+            log('Widget flyttet til posisjon INNE i målelement');
+          }
+        }
       }
     }
   }
@@ -1172,6 +1184,13 @@
   // Hovedfunksjon for å initialisere alt - optimalisert for ytelse
   async function initialize() {
     log('Ask widget initialization started');
+    
+    // Sjekk om produkttittelen finnes før vi fortsetter med initialiseringen
+    if (!isProductTitleAvailable()) {
+      log('Produkttittel ikke funnet - avbryter initialisering');
+      return;
+    }
+    
     setupCleanup();
     setupWidgetCloseListeners(); // Registrer nye lyttere for lukking/minimering
     

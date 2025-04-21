@@ -8,13 +8,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 type CarouselApi = UseEmblaCarouselType[1]
-type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
-type CarouselOptions = UseCarouselParameters[0]
-type CarouselPlugin = UseCarouselParameters[1]
+type EmblaCarouselType = ReturnType<typeof useEmblaCarousel>
 
 type CarouselProps = {
-  opts?: CarouselOptions
-  plugins?: CarouselPlugin
+  opts?: any
+  plugins?: any
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
 }
@@ -56,13 +54,20 @@ const Carousel = React.forwardRef<
     },
     ref
   ) => {
+    const defaultOpts = {
+      align: 'start',
+      containScroll: false,
+      dragFree: true,
+      loop: false,
+      ...opts,
+      axis: orientation === "horizontal" ? "x" : "y",
+    };
+    
     const [carouselRef, api] = useEmblaCarousel(
-      {
-        ...opts,
-        axis: orientation === "horizontal" ? "x" : "y",
-      },
+      defaultOpts,
       plugins
     )
+    
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 
@@ -117,15 +122,42 @@ const Carousel = React.forwardRef<
         api?.off("select", onSelect)
       }
     }, [api, onSelect])
+    
+    React.useEffect(() => {
+      if (api && carouselRef) {
+        const element = carouselRef as unknown as HTMLElement;
+        const root = element.parentElement;
+        
+        if (root) {
+          root.style.overflow = 'visible';
+          root.style.maxWidth = '100%';
+          root.style.width = '100%';
+          
+          const viewport = root.querySelector('.embla__viewport');
+          const container = viewport?.querySelector('.embla__container');
+          
+          if (viewport instanceof HTMLElement) {
+            viewport.style.overflow = 'visible';
+            viewport.style.width = '100%';
+            viewport.style.maxWidth = '100%';
+          }
+          
+          if (container instanceof HTMLElement) {
+            container.style.display = 'flex';
+            container.style.flexWrap = 'nowrap';
+          }
+        }
+      }
+    }, [api, carouselRef]);
 
     return (
       <CarouselContext.Provider
         value={{
           carouselRef,
           api: api,
-          opts,
+          opts: defaultOpts,
           orientation:
-            orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+            orientation || (defaultOpts?.axis === "y" ? "vertical" : "horizontal"),
           scrollPrev,
           scrollNext,
           canScrollPrev,
@@ -138,6 +170,12 @@ const Carousel = React.forwardRef<
           className={cn("ask-relative", className)}
           role="region"
           aria-roledescription="carousel"
+          style={{
+            maxWidth: '100%',
+            width: '100%',
+            overflow: 'visible',
+            boxSizing: 'border-box'
+          }}
           {...props}
         >
           {children}
@@ -155,14 +193,27 @@ const CarouselContent = React.forwardRef<
   const { carouselRef, orientation } = useCarousel()
 
   return (
-    <div ref={carouselRef} className="ask-overflow-hidden">
+    <div 
+      ref={carouselRef} 
+      className="ask-overflow-visible"
+      style={{
+        overflow: 'visible',
+        width: '100%',
+        maxWidth: '100%'
+      }}
+    >
       <div
         ref={ref}
         className={cn(
           "ask-flex",
-          orientation === "horizontal" ? "ask--ml-4" : "ask--mt-4 ask-flex-col",
+          orientation === "horizontal" ? "ask-flex-row" : "ask-flex-col",
           className
         )}
+        style={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          width: '100%'
+        }}
         {...props}
       />
     </div>
@@ -182,10 +233,14 @@ const CarouselItem = React.forwardRef<
       role="group"
       aria-roledescription="slide"
       className={cn(
-        "ask-min-w-0 ask-shrink-0 ask-grow-0",
+        "ask-min-w-0 ask-shrink-0 ask-grow-0 ask-box-border",
         orientation === "horizontal" ? "ask-pl-4" : "ask-pt-4",
         className
       )}
+      style={{
+        boxSizing: 'border-box',
+        overflow: 'visible'
+      }}
       {...props}
     />
   )
@@ -206,7 +261,7 @@ const CarouselPrevious = React.forwardRef<
       className={cn(
         "ask-absolute ask-h-8 ask-w-8 ask-rounded-full",
         orientation === "horizontal"
-          ? "ask--left-12 ask-top-1/2 ask--translate-y-1/2"
+          ? "ask--left-3 ask-top-1/2 ask--translate-y-1/2"
           : "ask--top-12 ask-left-1/2 ask--translate-x-1/2 ask-rotate-90",
         className
       )}
@@ -235,7 +290,7 @@ const CarouselNext = React.forwardRef<
       className={cn(
         "ask-absolute ask-h-8 ask-w-8 ask-rounded-full",
         orientation === "horizontal"
-          ? "ask--right-12 ask-top-1/2 ask--translate-y-1/2"
+          ? "ask--right-3 ask-top-1/2 ask--translate-y-1/2"
           : "ask--bottom-12 ask-left-1/2 ask--translate-x-1/2 ask-rotate-90",
         className
       )}
