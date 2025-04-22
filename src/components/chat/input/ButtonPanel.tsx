@@ -39,7 +39,7 @@ const ButtonPanel: React.FC<ButtonPanelProps> = memo(({
   const SparkleIcon = memo(() => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
       fill="currentColor" className="size-5 inline-block ml-1" 
-      style={{ color: "39665a", filter: "drop-shadow(0 0 3px rgba(127, 127, 127, 0.16))" }}>
+      style={{ color: "#444444", filter: "drop-shadow(0 0 3px rgba(127, 127, 127, 0.16))" }}>
       <path d="M15.98 1.804a1 1 0 0 0-1.96 0l-.24 1.192a1 1 0 0 1-.784.785
               l-1.192.238a1 1 0 0 0 0 1.962l1.192.238a1 1 0 0 1 .785.785l.238
               1.192a1 1 0 0 0 1.962 0l.238-1.192a1 1 0 0 1 .785-.785l1.192

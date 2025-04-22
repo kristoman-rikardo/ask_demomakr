@@ -13,10 +13,12 @@
     jsPath: 'https://cdn.jsdelivr.net/gh/kristoman-rikardo/ask_demomakr@main/dist/widget/chatWidget.js',
     scrapePath: 'https://cdn.jsdelivr.net/gh/kristoman-rikardo/ask_demomakr@main/scrapeSite.js',
     containerID: 'ask-chat-widget-container',
-    targetSelectorDesktop: '.product-accordion.accordion-items.product-view__accordion', // Legacy, brukes som fallback
-    targetSelectorMobile: '.product-description__short-description', // For skjermer smalere enn 768px
-    targetSelectorLargeDesktop: '.similar-product-list.product-view__similar-products', // For skjermer bredere enn 1024px
-    targetSelectorMediumDesktop: '.accordion-item__btn', // For skjermer mellom 768px og 1028px (kun første)
+    productTitleSelector: 'h1.product-single__title.ff-heading.fs-heading-large.c-heading',
+    widgetPlacementSelector: 'div.product__policies.fs-body-base.rte',
+    targetSelectorDesktop: 'div.product__policies.fs-body-base.rte', // Oppdatert til ny plassering
+    targetSelectorMobile: 'div.product__policies.fs-body-base.rte', // Oppdatert til å bruke samme for alle skjermstørrelser
+    targetSelectorLargeDesktop: 'div.product__policies.fs-body-base.rte', // Oppdatert til å bruke samme for alle skjermstørrelser
+    targetSelectorMediumDesktop: 'div.product__policies.fs-body-base.rte', // Oppdatert til å bruke samme for alle skjermstørrelser
     breakpoint: 768, // Grensepunkt for å bytte mellom mobile og desktop selektorer
     mediumBreakpoint: 1028, // Grensepunkt for mellomstore skjermer (768px-1028px)
     largeBreakpoint: 1024, // Grensepunkt for store skjermer (>=1024px)
@@ -250,10 +252,16 @@
     return selector;
   }
   
-  // Sjekk om produkttittel er tilgjengelig på siden - modifisert for å alltid returnere true
+  // Sjekk om produkttittel er tilgjengelig på siden
   function isProductTitleAvailable() {
-    // Returnerer alltid true for å fjerne avhengigheten av produkttittel
-    log('Ignorerer produkttittel-sjekk, widget vil alltid initialiseres');
+    const productTitle = document.querySelector(config.productTitleSelector);
+    if (productTitle) {
+      log('Fant produkttittel: ' + productTitle.textContent.trim());
+      return true;
+    }
+    
+    // Fallback: Returner true selv om vi ikke finner produkttittelen
+    log('Produkttittel ikke funnet, men fortsetter likevel med widget-initialisering');
     return true;
   }
   
@@ -262,9 +270,6 @@
     log('Setting up widget container');
     
     addGlobalStyles();
-    
-    const activeSelector = getTargetSelector();
-    log(`Bruker selektor: ${activeSelector} for nåværende skjermstørrelse (${window.innerWidth}px)`);
     
     // Fjern eksisterende container dersom den finnes
     const existingContainer = document.getElementById(config.containerID);
@@ -279,55 +284,17 @@
     container.setAttribute('data-ask-widget', 'true');
     container.setAttribute('data-expandable', 'true');
     
-    const screenWidth = window.innerWidth;
+    // Finn målelementet basert på den definerte selektoren - samme for alle skjermstørrelser
+    const targetElement = document.querySelector(config.widgetPlacementSelector);
     
-    if (screenWidth >= config.largeBreakpoint) {
-      // For stor desktop (>= 1024px): Plasser OVER similar-products
-      const similarProductsElement = document.querySelector(config.targetSelectorLargeDesktop);
-      
-      if (similarProductsElement && similarProductsElement.parentNode) {
-        log('Plasserer widget OVER similar-products seksjonen');
-        similarProductsElement.parentNode.insertBefore(container, similarProductsElement);
-        log('Widget plassert OVER similar-products');
-      } else {
-        log('Fant ikke similar-products seksjon, bruker fallback');
-        const fallbackElement = document.querySelector(config.targetSelectorDesktop);
-        if (fallbackElement) {
-          fallbackElement.appendChild(container);
-        } else {
-          document.body.appendChild(container);
-          log('Using document.body as fallback container');
-        }
-      }
-    } else if (screenWidth >= config.breakpoint && screenWidth < config.mediumBreakpoint) {
-      // For medium desktop (768px - 1028px): Plasser OVER FØRSTE accordion-item__btn
-      const firstAccordionBtn = document.querySelector(config.targetSelectorMediumDesktop);
-      
-      if (firstAccordionBtn && firstAccordionBtn.parentNode) {
-        log('Plasserer widget OVER den første accordion-item__btn');
-        firstAccordionBtn.parentNode.insertBefore(container, firstAccordionBtn);
-        log('Widget plassert OVER første accordion-item__btn');
-      } else {
-        log('Fant ikke første accordion-item__btn, bruker fallback');
-        const fallbackElement = document.querySelector(config.targetSelectorDesktop);
-        if (fallbackElement) {
-          fallbackElement.appendChild(container);
-        } else {
-          document.body.appendChild(container);
-          log('Using document.body as fallback container');
-        }
-      }
+    if (targetElement) {
+      // Plasser widget etter målelementet
+      targetElement.insertAdjacentElement('afterend', container);
+      log(`Widget plassert etter ${config.widgetPlacementSelector}`);
     } else {
-      // For mobil (< 768px): bruk standard mobilplassering
-      const targetElement = document.querySelector(config.targetSelectorMobile);
-      
-      if (targetElement) {
-        targetElement.appendChild(container);
-        log('Widget plassert på standard mobilposisjon');
-      } else {
-        document.body.appendChild(container);
-        log('Using document.body as fallback container');
-      }
+      // Fallback: Legg til i body hvis målelementet ikke finnes
+      document.body.appendChild(container);
+      log(`Målelement ${config.widgetPlacementSelector} ikke funnet, bruker document.body som fallback`);
     }
     
     log('Added chat widget container to target element');
@@ -342,46 +309,19 @@
   // Håndter vindusendringer - flytt widget ved behov
   function handleWindowResize() {
     const container = document.getElementById(config.containerID);
-    const screenWidth = window.innerWidth;
     
-    // Vi beholder flytt-logikken hvis widget-containeren ikke er hvor den skal være
+    // Vi beholder en forenklet flytt-logikk hvis widget-containeren ikke er hvor den skal være
     if (container && isWidgetInitialized) {
-      if (screenWidth >= config.largeBreakpoint) {
-        // For stor desktop (>= 1024px): Plasser OVER similar-products
-        const similarProductsElement = document.querySelector(config.targetSelectorLargeDesktop);
+      const targetElement = document.querySelector(config.widgetPlacementSelector);
+      
+      if (targetElement) {
+        // Sjekk om container er plassert riktig (rett etter målelementet)
+        const isCorrectlyPlaced = targetElement.nextElementSibling === container;
         
-        if (similarProductsElement && similarProductsElement.parentNode) {
-          // Sjekk om container er plassert riktig (rett før similar-products)
-          const containerIsBefore = container.nextElementSibling === similarProductsElement;
-          
-          if (!containerIsBefore) {
-            log('Flytter widget til posisjon OVER similar-products');
-            similarProductsElement.parentNode.insertBefore(container, similarProductsElement);
-            log('Widget flyttet til posisjon OVER similar-products');
-          }
-        }
-      } else if (screenWidth >= config.breakpoint && screenWidth < config.mediumBreakpoint) {
-        // For medium desktop (768px - 1028px): Plasser OVER FØRSTE accordion-item__btn
-        const firstAccordionBtn = document.querySelector(config.targetSelectorMediumDesktop);
-        
-        if (firstAccordionBtn && firstAccordionBtn.parentNode) {
-          // Sjekk om container er plassert riktig (rett før den første accordion-knappen)
-          const containerIsBefore = container.nextElementSibling === firstAccordionBtn;
-          
-          if (!containerIsBefore) {
-            log('Flytter widget til posisjon OVER første accordion-item__btn');
-            firstAccordionBtn.parentNode.insertBefore(container, firstAccordionBtn);
-            log('Widget flyttet til posisjon OVER første accordion-item__btn');
-          }
-        }
-      } else if (screenWidth < config.breakpoint) {
-        // For mobil (< 768px): container skal være INNE i målelementet
-        const mobileTarget = document.querySelector(config.targetSelectorMobile);
-        
-        if (mobileTarget && !mobileTarget.contains(container)) {
-          log(`Flytter widget til mobilposisjon INNE i målelement (${config.targetSelectorMobile})`);
-          mobileTarget.appendChild(container);
-          log('Widget flyttet til mobilposisjon');
+        if (!isCorrectlyPlaced) {
+          log(`Flytter widget til korrekt posisjon etter ${config.widgetPlacementSelector}`);
+          targetElement.insertAdjacentElement('afterend', container);
+          log('Widget flyttet til korrekt posisjon');
         }
       }
     }
