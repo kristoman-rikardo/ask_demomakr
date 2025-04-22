@@ -264,7 +264,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
     
     const transcriptId = findTranscriptId();
     if (transcriptId && onTranscriptCreated) {
-      console.log(`Transcript ID lagret: ${transcriptId}`);
       onTranscriptCreated(transcriptId);
       
       // Dispatch custom event for external listeners

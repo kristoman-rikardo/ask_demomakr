@@ -13,9 +13,13 @@
     jsPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.js',
     scrapePath: 'https://kristoman-rikardo.github.io/ask1proto-21/scrapeSite.js',
     containerID: 'ask-chat-widget-container',
-    targetSelectorDesktop: '.product-accordion.accordion-items.product-view__accordion', // Selector for placing widget OVER accordion on desktop
+    targetSelectorDesktop: '.product-accordion.accordion-items.product-view__accordion', // Legacy, brukes som fallback
     targetSelectorMobile: '.product-description__short-description', // For skjermer smalere enn 768px
+    targetSelectorLargeDesktop: '.similar-product-list.product-view__similar-products', // For skjermer bredere enn 1024px
+    targetSelectorMediumDesktop: '.accordion-item__btn', // For skjermer mellom 768px og 1028px (kun første)
     breakpoint: 768, // Grensepunkt for å bytte mellom mobile og desktop selektorer
+    mediumBreakpoint: 1028, // Grensepunkt for mellomstore skjermer (768px-1028px)
+    largeBreakpoint: 1024, // Grensepunkt for store skjermer (>=1024px)
     minHeight: 300,
     resizeInterval: 1000, // Økt til 1000ms for bedre ytelse
     voiceflowTimeout: 15000, // Timeout for Voiceflow API i millisekunder
@@ -44,13 +48,13 @@
   // Legg til en variabel for å spore om bredden er satt
   let containerWidthIsFixed = false;
 
-  // Enkel logging kun til konsoll - nå kun for widget initialisering
+  // Enkel logging kun til konsoll for widget initialisering
   function log(message) {
-    // Kun logg initialiseringsmeldingen
+    // Logg initialiseringsmeldingen til konsollen
     if (message.includes('Widget successfully initialized')) {
       console.log(`[AskWidget] Ask Widget Initialized`);
     }
-    // Alle andre meldinger vil bli ignorert
+    // Andre meldinger logges ikke
   }
   
   // Test om Shadow DOM faktisk fungerer i denne konteksten
@@ -216,15 +220,34 @@
 
   // Hjelpefunksjon for å bestemme riktig målselektor basert på skjermbredde
   function getTargetSelector() {
-    const isMobile = window.innerWidth < config.breakpoint;
-    const targetType = isMobile ? 'mobile' : 'desktop';
+    const screenWidth = window.innerWidth;
+    let targetType = '';
+    let selector = '';
+    
+    if (screenWidth >= config.largeBreakpoint) {
+      // Fra og med 1024px - bruk Large Desktop selektor (over similar-products)
+      targetType = 'large-desktop';
+      selector = config.targetSelectorLargeDesktop;
+    } else if (screenWidth >= config.breakpoint && screenWidth < config.mediumBreakpoint) {
+      // Mellom 768px og 1028px - bruk Medium Desktop selektor (over første accordion-item__btn)
+      targetType = 'medium-desktop';
+      selector = config.targetSelectorMediumDesktop;
+    } else if (screenWidth < config.breakpoint) {
+      // Under 768px - bruk Mobile selektor
+      targetType = 'mobile';
+      selector = config.targetSelectorMobile;
+    } else {
+      // Fallback til standard desktop
+      targetType = 'desktop';
+      selector = config.targetSelectorDesktop;
+    }
     
     if (targetType !== lastTargetType) {
-      log(`Skjermstørrelse endret til ${targetType} (${window.innerWidth}px)`);
+      log(`Skjermstørrelse endret til ${targetType} (${screenWidth}px)`);
       lastTargetType = targetType;
     }
     
-    return isMobile ? config.targetSelectorMobile : config.targetSelectorDesktop;
+    return selector;
   }
   
   // Sjekk om produkttittel er tilgjengelig på siden
@@ -266,34 +289,51 @@
     container.setAttribute('data-ask-widget', 'true');
     container.setAttribute('data-expandable', 'true');
     
-    const isMobile = window.innerWidth < 1024; // 64em = 1024px
+    const screenWidth = window.innerWidth;
     
-    if (!isMobile) {
-      // For desktop: sett inn i grid-layout
-      const gridContainer = document.querySelector('section.product-view__main[data-v-4d2ec0af]');
+    if (screenWidth >= config.largeBreakpoint) {
+      // For stor desktop (>= 1024px): Plasser OVER similar-products
+      const similarProductsElement = document.querySelector(config.targetSelectorLargeDesktop);
       
-      if (gridContainer) {
-        log('Plasserer widget i grid-layout på desktop');
-        gridContainer.appendChild(container); // Legges til sist i grid -> høyre kolonne
-        log('Widget plassert i høyre kolonne av grid-layout');
+      if (similarProductsElement && similarProductsElement.parentNode) {
+        log('Plasserer widget OVER similar-products seksjonen');
+        similarProductsElement.parentNode.insertBefore(container, similarProductsElement);
+        log('Widget plassert OVER similar-products');
       } else {
-        // Fallback til standard plassering hvis grid-container ikke finnes
-        log('Fant ikke grid-container section.product-view__main, bruker fallback');
-        const targetElement = document.querySelector(activeSelector);
-        
-        if (targetElement) {
-          targetElement.appendChild(container);
+        log('Fant ikke similar-products seksjon, bruker fallback');
+        const fallbackElement = document.querySelector(config.targetSelectorDesktop);
+        if (fallbackElement) {
+          fallbackElement.appendChild(container);
+        } else {
+          document.body.appendChild(container);
+          log('Using document.body as fallback container');
+        }
+      }
+    } else if (screenWidth >= config.breakpoint && screenWidth < config.mediumBreakpoint) {
+      // For medium desktop (768px - 1028px): Plasser OVER FØRSTE accordion-item__btn
+      const firstAccordionBtn = document.querySelector(config.targetSelectorMediumDesktop);
+      
+      if (firstAccordionBtn && firstAccordionBtn.parentNode) {
+        log('Plasserer widget OVER den første accordion-item__btn');
+        firstAccordionBtn.parentNode.insertBefore(container, firstAccordionBtn);
+        log('Widget plassert OVER første accordion-item__btn');
+      } else {
+        log('Fant ikke første accordion-item__btn, bruker fallback');
+        const fallbackElement = document.querySelector(config.targetSelectorDesktop);
+        if (fallbackElement) {
+          fallbackElement.appendChild(container);
         } else {
           document.body.appendChild(container);
           log('Using document.body as fallback container');
         }
       }
     } else {
-      // For mobil: bruk standard plassering
-      const targetElement = document.querySelector(activeSelector);
+      // For mobil (< 768px): bruk standard mobilplassering
+      const targetElement = document.querySelector(config.targetSelectorMobile);
       
       if (targetElement) {
         targetElement.appendChild(container);
+        log('Widget plassert på standard mobilposisjon');
       } else {
         document.body.appendChild(container);
         log('Using document.body as fallback container');
@@ -311,37 +351,47 @@
 
   // Håndter vindusendringer - flytt widget ved behov
   function handleWindowResize() {
-    const currentSelector = getTargetSelector();
     const container = document.getElementById(config.containerID);
-    const isMobile = window.innerWidth < 1024; // 64em = 1024px
+    const screenWidth = window.innerWidth;
     
     // Vi beholder flytt-logikken hvis widget-containeren ikke er hvor den skal være
     if (container && isWidgetInitialized) {
-      if (!isMobile) {
-        // For desktop: plasser widget i grid-layout
-        const gridContainer = document.querySelector('section.product-view__main[data-v-4d2ec0af]');
+      if (screenWidth >= config.largeBreakpoint) {
+        // For stor desktop (>= 1024px): Plasser OVER similar-products
+        const similarProductsElement = document.querySelector(config.targetSelectorLargeDesktop);
         
-        if (gridContainer) {
-          // Sjekk om containeren er plassert riktig (i grid-containeren)
-          if (!gridContainer.contains(container)) {
-            log('Flytter widget til posisjon i grid-layout på desktop');
-            
-            // Flytt widgeten til grid-containeren
-            gridContainer.appendChild(container);
-            
-            log('Widget flyttet til grid-layout');
+        if (similarProductsElement && similarProductsElement.parentNode) {
+          // Sjekk om container er plassert riktig (rett før similar-products)
+          const containerIsBefore = container.nextElementSibling === similarProductsElement;
+          
+          if (!containerIsBefore) {
+            log('Flytter widget til posisjon OVER similar-products');
+            similarProductsElement.parentNode.insertBefore(container, similarProductsElement);
+            log('Widget flyttet til posisjon OVER similar-products');
           }
         }
-      } else {
-        // For mobile: container skal være INNE i målelementet
+      } else if (screenWidth >= config.breakpoint && screenWidth < config.mediumBreakpoint) {
+        // For medium desktop (768px - 1028px): Plasser OVER FØRSTE accordion-item__btn
+        const firstAccordionBtn = document.querySelector(config.targetSelectorMediumDesktop);
+        
+        if (firstAccordionBtn && firstAccordionBtn.parentNode) {
+          // Sjekk om container er plassert riktig (rett før den første accordion-knappen)
+          const containerIsBefore = container.nextElementSibling === firstAccordionBtn;
+          
+          if (!containerIsBefore) {
+            log('Flytter widget til posisjon OVER første accordion-item__btn');
+            firstAccordionBtn.parentNode.insertBefore(container, firstAccordionBtn);
+            log('Widget flyttet til posisjon OVER første accordion-item__btn');
+          }
+        }
+      } else if (screenWidth < config.breakpoint) {
+        // For mobil (< 768px): container skal være INNE i målelementet
         const mobileTarget = document.querySelector(config.targetSelectorMobile);
+        
         if (mobileTarget && !mobileTarget.contains(container)) {
-          log(`Flytter widget til ny posisjon INNE i målelement (${config.targetSelectorMobile})`);
-          
-          // Flytt containeren til inne i målelementet for mobil
+          log(`Flytter widget til mobilposisjon INNE i målelement (${config.targetSelectorMobile})`);
           mobileTarget.appendChild(container);
-          
-          log('Widget flyttet til posisjon INNE i målelement');
+          log('Widget flyttet til mobilposisjon');
         }
       }
     }
@@ -1265,6 +1315,9 @@
         }
       }
     }, 5000);
+    
+    // Legg til en melding om at widgeten er initialisert for å triggre loggingen
+    log('Widget successfully initialized');
   }
   
   function monitorLoadState() {

@@ -19,16 +19,12 @@ export function useMessageInteraction(
       content: text
     };
     
-    console.log('Adding user message:', message);
-    
     // Add the message to the chat
     setMessages(prev => [...prev, message]);
   };
 
   const sendUserMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
-
-    console.log('Sending user message:', userMessage);
     
     // Add the user's message to the chat before sending
     addUserMessage(userMessage);
@@ -48,17 +44,14 @@ export function useMessageInteraction(
       // Lagre transkripsjonen asynkront etter sending av meldingen
       const userId = getUserId();
       saveTranscriptWithRetry(userId).catch(err => {
-        console.error('Kunne ikke lagre transkripsjon, men fortsetter samtalen:', err);
+        // Håndterer stille feilen ved lagring av transkripsjon
       });
     } catch (error) {
-      console.error('Error sending message:', error);
-      // Handle error case
+      // Håndterer stille feil ved sending av melding
     }
   };
 
   const handleButtonClick = async (button: Button) => {
-    console.log('Button clicked:', button.name);
-    
     // Display the button's name as the user message
     addUserMessage(button.name);
     
@@ -77,11 +70,10 @@ export function useMessageInteraction(
       // Lagre transkripsjonen asynkront etter sending av knappeklikket
       const userId = getUserId();
       saveTranscriptWithRetry(userId).catch(err => {
-        console.error('Kunne ikke lagre transkripsjon, men fortsetter samtalen:', err);
+        // Håndterer stille feilen ved lagring av transkripsjon
       });
     } catch (error) {
-      console.error('Error processing button action:', error);
-      // Handle error case
+      // Håndterer stille feil ved knappeklikk
     }
   };
 

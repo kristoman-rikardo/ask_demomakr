@@ -60,9 +60,6 @@ export function getUserId(variables: Record<string, any> = {}): string {
     }
   }
   
-  // Bare logg bruker-ID-en uten andre meldinger
-  console.log(userId);
-  
   return userId;
 }
 

@@ -114,8 +114,6 @@ class ChatWidgetClass {
     if (this.container) {
       this.container.setAttribute('data-transcript-id', transcriptId);
     }
-    
-    console.log(`Transcript ID lagret: ${transcriptId}`);
   }
 
   /**

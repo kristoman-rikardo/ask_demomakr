@@ -1,4 +1,3 @@
-
 import { useRef } from 'react';
 import { MessageStreamingHook } from '@/hooks/useMessageStreaming';
 import { createStreamingProcessState } from '@/utils/streamingProcessUtils';
@@ -24,12 +23,10 @@ export function useCompletionEventHandler(
 
   const handleCompletionEvent = (payload: any) => {
     if (!payload) {
-      console.warn('Empty completion payload received');
       return;
     }
     
     const { state, content } = payload;
-    console.log('Completion event:', state, content ? content.substring(0, 50) + '...' : '');
     
     if (state === 'start') {
       return completionHandlers.handleCompletionStart();

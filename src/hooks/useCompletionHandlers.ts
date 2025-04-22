@@ -23,7 +23,6 @@ export const createCompletionHandlers = (
    * Handle the start of a completion event
    */
   const handleCompletionStart = () => {
-    console.log('Completion started');
     const msgId = `completion-${Date.now()}`;
     
     // Check if we already have a text message
@@ -42,8 +41,6 @@ export const createCompletionHandlers = (
       partialMessageIdRef.current = msgId;
       currentCompletionContentRef.current = '';
       messageSourceTracker.current[msgId] = 'completion';
-    } else {
-      console.log('Skipping completion message as we already have a text message');
     }
     return true;
   };
@@ -53,8 +50,6 @@ export const createCompletionHandlers = (
    */
   const handleCompletionContent = (content: string | undefined) => {
     if (!content) return;
-    
-    console.log(`Received content trace: "${content}"`);
     
     // If we haven't started a message yet
     if (!partialMessageIdRef.current) {
@@ -90,7 +85,6 @@ export const createCompletionHandlers = (
       if (streamingState.isStreaming) {
         // If we're currently streaming, add this content to accumulated buffer
         streamingState.accumulatedContent += content;
-        console.log(`Added to buffer (now ${streamingState.accumulatedContent.length} chars)`);
       } else {
         // If we're not currently streaming, start streaming this content
         processContentStream(
@@ -109,7 +103,6 @@ export const createCompletionHandlers = (
    * Handle the end of a completion event
    */
   const handleCompletionEnd = () => {
-    console.log('Completion ended');
     streamingState.messageCompleted = true;
     
     // If we have pending content and we're not currently streaming, process it
@@ -142,7 +135,6 @@ export const createCompletionHandlers = (
       !streamingState.isStreaming && 
       partialMessageIdRef.current
     ) {
-      console.log('Message completed, finalizing');
       const currentMsgId = partialMessageIdRef.current;
       
       // Ensure all content is processed

@@ -42,7 +42,6 @@ export async function saveTranscript(sessionID: string): Promise<boolean> {
       const data = await response.json();
       if (data && data._id) {
         sessionStorage.setItem('vf_transcript_id', data._id);
-        console.log('Transcript ID lagret:', data._id);
       }
     } catch (parseError) {
       console.error('Kunne ikke tolke transkripsjon-respons:', parseError);

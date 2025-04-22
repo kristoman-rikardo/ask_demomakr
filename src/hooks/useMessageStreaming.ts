@@ -80,12 +80,6 @@ export function useMessageStreaming(
   const addAgentMessage = (text: string, isPartial = false, existingId?: string) => {
     const messageId = existingId || Date.now().toString();
     
-    console.log(`${isPartial ? 'Partial' : 'Final'} agent message:`, { 
-      messageId, 
-      text: text.substring(0, 50) + (text.length > 50 ? '...' : ''), 
-      isPartial 
-    });
-    
     updatePartialMessage(messageId, text, isPartial);
 
     if (!isPartial) {

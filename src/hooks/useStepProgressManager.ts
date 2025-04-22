@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 
 export function useStepProgressManager(
@@ -20,7 +19,6 @@ export function useStepProgressManager(
   const handleSpecialBlockId = (blockId: string) => {
     // Check for the specific block ID that should trigger another circle
     if (blockId === '67d742f919dcd04caec92381') {
-      console.log('🔵 Detected special block ID, adding another circle');
       setStepsTotal(prev => Math.max(prev + 1, 3));
       setCurrentStepIndex(prev => prev + 1);
       return true;
