@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Eksempel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        .code-example {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        pre {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Slik implementerer du Chat Widget på din nettside</h1>
+        
+        <p>For å legge til chat-widgeten på din nettside, plasser følgende script-tag før <code>&lt;/body&gt;</code>-taggen i HTML-dokumentet ditt:</p>
+        
+        <div class="code-example">
+            <pre><code>&lt;script src="https://ask1proto-21-aoi5dtz2b-kristoman-rikardos-projects.vercel.app/chat-embed.js"&gt;&lt;/script&gt;</code></pre>
+        </div>
+        
+        <h2>Tilpasse widgeten</h2>
+        <p>Du kan tilpasse widgeten ved å legge til et konfigurasjonsobjekt før du laster inn scriptet:</p>
+        
+        <div class="code-example">
+            <pre><code>&lt;script&gt;
+    window.ChatWidgetConfig = {
+        position: 'bottom-left', // Mulige verdier: 'bottom-right', 'bottom-left', 'top-right', 'top-left'
+        apiEndpoint: 'https://ditt-api-endepunkt.com'
+    };
+&lt;/script&gt;
+&lt;script src="https://ask1proto-21-aoi5dtz2b-kristoman-rikardos-projects.vercel.app/chat-embed.js"&gt;&lt;/script&gt;</code></pre>
+        </div>
+        
+        <h2>Eksempel på denne siden</h2>
+        <p>Dette er en demo av chat-widgeten. Den skal vises nederst til høyre på skjermen.</p>
+    </div>
+    
+    <!-- Chat Widget Script -->
+    <script src="chat-embed.js"></script>
+</body>
+</html> 
