@@ -9,9 +9,9 @@
   const config = {
     apiKey: 'VF.DM.680756c9821a36494d3ec6f7.mGwliozqZPx2WUwX',
     projectID: '6806278ad8f7eeeb59e763ed',
-    cssPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.css',
-    jsPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.js',
-    scrapePath: 'https://kristoman-rikardo.github.io/ask1proto-21/scrapeSite.js',
+    cssPath: 'https://cdn.jsdelivr.net/gh/kristoman-rikardo/ask_demomakr@main/dist/widget/chatWidget.css',
+    jsPath: 'https://cdn.jsdelivr.net/gh/kristoman-rikardo/ask_demomakr@main/dist/widget/chatWidget.js',
+    scrapePath: 'https://cdn.jsdelivr.net/gh/kristoman-rikardo/ask_demomakr@main/scrapeSite.js',
     containerID: 'ask-chat-widget-container',
     targetSelectorDesktop: '.product-accordion.accordion-items.product-view__accordion', // Legacy, brukes som fallback
     targetSelectorMobile: '.product-description__short-description', // For skjermer smalere enn 768px
@@ -250,26 +250,16 @@
     return selector;
   }
   
-  // Sjekk om produkttittel er tilgjengelig på siden
+  // Sjekk om produkttittel er tilgjengelig på siden - modifisert for å alltid returnere true
   function isProductTitleAvailable() {
-    const productTitle = document.querySelector('.product-header__title');
-    if (productTitle) {
-      log('Fant produkttittel: ' + productTitle.textContent.trim());
-      return true;
-    }
-    log('Produkttittel ikke funnet på siden - widget vil ikke bli initialisert');
-    return false;
+    // Returnerer alltid true for å fjerne avhengigheten av produkttittel
+    log('Ignorerer produkttittel-sjekk, widget vil alltid initialiseres');
+    return true;
   }
   
   // Finn target-elementet og sett inn widget-containeren
   function setupContainer() {
     log('Setting up widget container');
-    
-    // Sjekk om produkttittelen er tilgjengelig, hvis ikke avslutt initialiseringen
-    if (!isProductTitleAvailable()) {
-      log('Produkttittel ikke funnet - widget blir ikke initialisert');
-      return false;
-    }
     
     addGlobalStyles();
     
@@ -697,15 +687,8 @@
     }
     
     log('Received scrapeComplete event');
-    const { side_innhold, browser_url, produkt_navn } = event.detail || {};
+    const { side_innhold, browser_url } = event.detail || {};
      
-    // Logg bruker-ID info (alltid, uavhengig av debug-flagg)
-    if (produkt_navn) {
-      console.log(`Produktnavn for bruker-ID: "${produkt_navn}"`);
-    } else {
-      console.log('Ingen produktnavn tilgjengelig for bruker-ID');
-    }
-    
     if (!side_innhold || side_innhold.length === 0) {
       log('No content extracted from page');
       return;
@@ -764,8 +747,7 @@
               type: "launch",
               payload: {
                 browser_url: browser_url || window.location.href,
-                side_innhold: side_innhold.substring(0, 5000),
-                produkt_navn: produkt_navn || ''
+                side_innhold: side_innhold.substring(0, 5000)
               }
             }
           }
@@ -851,8 +833,7 @@
                     type: "launch",
                     payload: {
                       browser_url: browser_url || window.location.href,
-                      side_innhold: side_innhold.substring(0, 5000),
-                      produkt_navn: produkt_navn || ''
+                      side_innhold: side_innhold.substring(0, 5000)
                     }
                   }
                 }
@@ -1223,12 +1204,6 @@
   // Hovedfunksjon for å initialisere alt - optimalisert for ytelse
   async function initialize() {
     log('Ask widget initialization started');
-    
-    // Sjekk om produkttittelen finnes før vi fortsetter med initialiseringen
-    if (!isProductTitleAvailable()) {
-      log('Produkttittel ikke funnet - avbryter initialisering');
-      return;
-    }
     
     setupCleanup();
     setupWidgetCloseListeners(); // Registrer nye lyttere for lukking/minimering
