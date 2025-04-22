@@ -51,7 +51,7 @@ const ScrollDownIndicator: React.FC<ScrollDownIndicatorProps> = memo(({ onClick,
         >
           <ChevronDown 
             size={12} 
-            className="ask-text-[#28483F]"
+            className="ask-text-[#444444]"
           />
         </button>
       </div>

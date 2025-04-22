@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Check for environment variables and provide fallbacks
 // Export these constants for use in other modules
-export const RUNTIME_API_KEY = import.meta.env.VITE_VOICEFLOW_API_KEY || 'VF.DM.67f3a3aabc8d1cb788d71d55.oO0bhO9dNnsn67Lv';
+export const RUNTIME_API_KEY = import.meta.env.VITE_VOICEFLOW_API_KEY || 'VF.DM.680756c9821a36494d3ec6f7.mGwliozqZPx2WUwX';
 export const RUNTIME_ENDPOINT = 'https://general-runtime.voiceflow.com';
-export const PROJECT_ID = import.meta.env.VITE_VOICEFLOW_PROJECT_ID || '67f291952280faa3b19ddfcb';
+export const PROJECT_ID = import.meta.env.VITE_VOICEFLOW_PROJECT_ID || '6806278ad8f7eeeb59e763ed';
 
 // Generate a default user session ID
 const DEFAULT_USER_ID = 'user_' + uuidv4();
@@ -69,7 +69,7 @@ export function parseMarkdown(text: string): string {
   // Convert markdown links: [text](url)
   text = text.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g, 
-    '<a href="$2" target="_blank" rel="noopener noreferrer" class="ask-text-[#28483F] ask-underline hover:ask-opacity-80">$1</a>'
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="ask-text-[#444444] ask-underline hover:ask-opacity-80">$1</a>'
   );
   
   // Handle bold: **text** or __text__

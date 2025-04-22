@@ -104,14 +104,14 @@ const ShadowRootWrapper: React.FC<ShadowRootWrapperProps> = ({
 
           input:focus {
             border-color: transparent;
-            box-shadow: 0 0 0 2px #28483F;
+            box-shadow: 0 0 0 2px #444444;
             background-color: white;
           }
 
           /* Chat-message stiler */
           .chat-message-user {
-            background-color: #ebfaef;
-            color: #28483F;
+            background-color: #f0f1f3;
+            color: #444444;
             border-radius: 12px;
             padding: 10px 12px;
           }

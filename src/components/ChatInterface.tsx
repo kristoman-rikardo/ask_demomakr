@@ -591,14 +591,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
                   className="ask-bg-gray-100 ask-hover:bg-gray-200 ask-transition-colors ask-p-1 ask-rounded-full ask-shadow-sm"
                   aria-label="Close chat"
                 >
-                  <X size={14} className="ask-text-[#28483f]" />
+                  <X size={14} className="ask-text-[#444444]" />
                 </button>
                 <button
                   onClick={toggleMinimize}
                   className="ask-bg-gray-100 ask-hover:bg-gray-200 ask-transition-colors ask-p-1 ask-rounded-full ask-shadow-sm"
                   aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
                 >
-                  <ChevronDown size={14} className={`ask-text-[#28483f] ${isMinimized ? "ask-rotate-180" : ""}`} />
+                  <ChevronDown size={14} className={`ask-text-[#444444] ${isMinimized ? "ask-rotate-180" : ""}`} />
                 </button>
               </div>
             )}
@@ -664,7 +664,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, onMaximize }) =>
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="ask-font-normal"
-                style={{ color: "#28483F" }}
+                style={{ color: "#444444" }}
               >
                 Ask
               </a>

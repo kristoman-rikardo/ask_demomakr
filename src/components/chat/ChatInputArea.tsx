@@ -106,7 +106,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             ask-rounded-2xl ask-bg-gray-50/90 
             ask-border ask-border-gray-200 
             ask-shadow-sm hover:ask-shadow-md 
-            focus:ask-border-transparent focus:ask-outline-none focus:ask-ring-2 focus:ask-ring-[#28483F] 
+            focus:ask-border-transparent focus:ask-outline-none focus:ask-ring-2 focus:ask-ring-[#444444] 
             active:ask-translate-y-[1px]
             ${isFocused ? 'ask-widget-input-focused ask-bg-white' : ''}
             ${isMinimized ? 'ask-widget-input-minimized ask-cursor-pointer' : ''}`} 
@@ -126,7 +126,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             color: "#333333",
             lineHeight: "1.5",
             fontSize: "14px",
-            boxShadow: isFocused ? "0 0 0 2px #28483F" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+            boxShadow: isFocused ? "0 0 0 2px #444444" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
             position: "relative",
             transition: "all 0.2s ease-in-out",
             cursor: isMinimized ? "pointer" : "text"
@@ -145,9 +145,9 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               className="ask-p-1.5 ask-text-white ask-rounded-full 
                        ask-transition-all ask-duration-300 ask-transform 
                        hover:ask-bg-opacity-80 active:ask-shadow-sm 
-                       focus:ask-outline-none focus:ask-ring-2 focus:ask-ring-green-600"
+                       focus:ask-outline-none focus:ask-ring-2 focus:ask-ring-gray-400"
               aria-label="Expand chat"
-              style={{ backgroundColor: "#28483F" }}
+              style={{ backgroundColor: "#444444" }}
             >
               <Maximize2 size={14} className="ask-transform" />
             </button>
@@ -163,7 +163,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                        ${isFocused ? 'ask-scale-110' : 'ask-scale-100'}
                        ${isLoading ? 'ask-opacity-50 ask-cursor-not-allowed' : ''}`}
               aria-label="Send message"
-              style={{ backgroundColor: "#28483F" }}
+              style={{ backgroundColor: "#444444" }}
             >
               <ArrowRight size={14} className="ask-transform ask-transition-transform ask-duration-300 ask--rotate-45 ask-text-white" />
             </button>

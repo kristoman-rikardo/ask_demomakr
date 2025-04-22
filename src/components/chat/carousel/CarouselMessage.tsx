@@ -225,7 +225,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = memo(({ cards, onButtonC
                             fontFamily: "'Inter', system-ui, sans-serif",
                             fontWeight: 500,
                             boxShadow: '1px 1px 3px rgba(0,0,0,0.12)',
-                            backgroundColor: isBuyNowButton ? '#28483F10' : '#f0f0f0',
+                            backgroundColor: isBuyNowButton ? '#44444410' : '#f0f0f0',
                             border: '1px solid #e0e0e0',
                             transform: 'translateY(0)',
                             transition: 'all 0.2s ease',
@@ -233,13 +233,13 @@ const CarouselMessage: React.FC<CarouselMessageProps> = memo(({ cards, onButtonC
                             zIndex: 1
                           }}
                           onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#28483F20' : '#e8e8e8';
+                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#44444420' : '#e8e8e8';
                             e.currentTarget.style.transform = 'translateY(-1px)';
                             e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.18)';
                             e.currentTarget.style.zIndex = '5';
                           }}
                           onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#28483F10' : '#f0f0f0';
+                            e.currentTarget.style.backgroundColor = isBuyNowButton ? '#44444410' : '#f0f0f0';
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = '1px 1px 3px rgba(0,0,0,0.12)';
                             e.currentTarget.style.zIndex = '1';
@@ -251,7 +251,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = memo(({ cards, onButtonC
                               fontFamily: "'Inter', system-ui, sans-serif",
                               fontWeight: 500,
                               lineHeight: 1.2,
-                              color: isBuyNowButton ? '#28483F' : 'inherit',
+                              color: isBuyNowButton ? '#444444' : 'inherit',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -262,7 +262,7 @@ const CarouselMessage: React.FC<CarouselMessageProps> = memo(({ cards, onButtonC
                             {isBuyNowButton && (
                               <ExternalLink 
                                 size={14} 
-                                style={{ color: '#28483F', strokeWidth: 2 }} 
+                                style={{ color: '#444444', strokeWidth: 2 }} 
                               />
                             )}
                           </span>

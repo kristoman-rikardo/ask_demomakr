@@ -7,8 +7,8 @@
   
   // Konfigurasjon - kan endres basert på implementasjon
   const config = {
-    apiKey: 'VF.DM.67f3a3aabc8d1cb788d71d55.oO0bhO9dNnsn67Lv',
-    projectID: '67f291952280faa3b19ddfcb',
+    apiKey: 'VF.DM.680756c9821a36494d3ec6f7.mGwliozqZPx2WUwX',
+    projectID: '6806278ad8f7eeeb59e763ed',
     cssPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.css',
     jsPath: 'https://kristoman-rikardo.github.io/ask1proto-21/dist/widget/chatWidget.js',
     scrapePath: 'https://kristoman-rikardo.github.io/ask1proto-21/scrapeSite.js',

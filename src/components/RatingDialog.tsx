@@ -172,7 +172,7 @@ const RatingDialog: React.FC<RatingDialogProps> = ({
               onClick={handleSubmit} 
               disabled={rating === 0}
               className="ask-rounded-xl ask-text-xs ask-text-white"
-              style={{ backgroundColor: "#28483F", fontFamily: "'Inter', system-ui, sans-serif" }}
+              style={{ backgroundColor: "#444444", fontFamily: "'Inter', system-ui, sans-serif" }}
             >
               Submit
             </Button>
